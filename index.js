@@ -1,39 +1,87 @@
 import { eventSource, event_types } from '../../../../script.js';
 import { world_names } from '../../../world-info.js';
 
-const STORAGE_KEY = 'worldbook_tags_v1';
+// 用於 localStorage 遷移的舊 key
+const OLD_STORAGE_KEY = 'worldbook_tags_v1';
+// SillyTavern extension settings 的唯一識別符
+const MODULE_NAME = 'worldbook_tags_manager';
+
+// 預設設定
+const defaultSettings = Object.freeze({
+    tags: {} // 結構：{ worldbookName: ['tag1', 'tag2'] }
+});
+
+// 獲取 extension settings
+function getSettings() {
+    const context = SillyTavern.getContext();
+    const { extensionSettings } = context;
+
+    // 初始化設定（如果不存在）
+    if (!extensionSettings[MODULE_NAME]) {
+        extensionSettings[MODULE_NAME] = structuredClone(defaultSettings);
+
+        // 從舊的 localStorage 遷移資料（如果存在）
+        try {
+            const oldData = localStorage.getItem(OLD_STORAGE_KEY);
+            if (oldData) {
+                const parsed = JSON.parse(oldData);
+                extensionSettings[MODULE_NAME].tags = parsed;
+                console.log('[WB Tags] 已從 localStorage 遷移資料');
+                // 遷移後可選擇性刪除舊資料
+                // localStorage.removeItem(OLD_STORAGE_KEY);
+            }
+        } catch (e) {
+            console.warn('[WB Tags] localStorage 遷移失敗:', e);
+        }
+    }
+
+    // 確保所有預設 key 都存在
+    for (const key of Object.keys(defaultSettings)) {
+        if (!Object.hasOwn(extensionSettings[MODULE_NAME], key)) {
+            extensionSettings[MODULE_NAME][key] = structuredClone(defaultSettings[key]);
+        }
+    }
+
+    return extensionSettings[MODULE_NAME];
+}
+
+// 儲存設定
+function saveSettings() {
+    const context = SillyTavern.getContext();
+    context.saveSettingsDebounced();
+}
 
 // === 資料層 ===
 const TagStorage = {
     load() {
         try {
-            const data = localStorage.getItem(STORAGE_KEY);
-            return data ? JSON.parse(data) : {};
+            return getSettings().tags || {};
         } catch (e) {
             console.error('[WB Tags] 載入失敗:', e);
             return {};
         }
     },
-    
+
     save(data) {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            getSettings().tags = data;
+            saveSettings();
         } catch (e) {
             console.error('[WB Tags] 儲存失敗:', e);
         }
     },
-    
+
     getTags(worldbookName) {
         const data = this.load();
         return data[worldbookName] || [];
     },
-    
+
     setTags(worldbookName, tags) {
         const data = this.load();
         data[worldbookName] = tags;
         this.save(data);
     },
-    
+
     addTag(worldbookName, tag) {
         const tags = this.getTags(worldbookName);
         if (!tags.includes(tag)) {
@@ -41,12 +89,12 @@ const TagStorage = {
             this.setTags(worldbookName, tags);
         }
     },
-    
+
     removeTag(worldbookName, tag) {
         const tags = this.getTags(worldbookName).filter(t => t !== tag);
         this.setTags(worldbookName, tags);
     },
-    
+
     getAllTags() {
         const data = this.load();
         const allTags = new Set();
