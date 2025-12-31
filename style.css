@@ -10,13 +10,13 @@
 
 #wb-tag-filter-btn:hover,
 #wb-tag-manage-btn:hover {
-    color: #3b82f6;
+    color: var(--SmartThemeBlurTintColor);
 }
 
 /* 啟用狀態（有篩選時） */
 #wb-tag-filter-btn.wb-active {
-    color: #3b82f6;
-    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--SmartThemeBlurTintColor);
+    background-color: var(--black30a);
 }
 
 /* === 遮罩層 === */
@@ -26,8 +26,8 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(2px);
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -38,14 +38,16 @@
 
 /* === 主面板 === */
 .wb-tag-modal {
-    background: #ffffff;
+    background: var(--SmartThemeBodyColor);
+    color: var(--SmartThemeBodyText);
+    border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 12px;
     width: 100%;
     max-width: 500px;
     max-height: 80vh;
     display: flex;
     flex-direction: column;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     overflow: hidden;
 }
 
@@ -59,15 +61,15 @@
     justify-content: space-between;
     align-items: center;
     padding: 20px;
-    border-bottom: 1px solid #e5e7eb;
-    background: #f9fafb;
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+    background: var(--black30a);
     flex-shrink: 0;
 }
 
 .wb-tag-header h3 {
     margin: 0;
     font-size: 1.2em;
-    color: #111827;
+    color: var(--SmartThemeBodyText);
 }
 
 .wb-tag-close {
@@ -75,7 +77,7 @@
     border: none;
     font-size: 1.5em;
     cursor: pointer;
-    color: #9ca3af;
+    color: var(--grey70);
     transition: color 0.2s;
     padding: 0;
     width: 32px;
@@ -100,11 +102,11 @@
 
 /* === 篩選提示 === */
 .wb-filter-hint {
-    color: #6b7280;
+    color: var(--grey70);
     font-size: 0.9em;
     text-align: center;
     padding: 10px;
-    background: #f3f4f6;
+    background: var(--black30a);
     border-radius: 6px;
 }
 
@@ -120,8 +122,8 @@
 /* === 標籤晶片 === */
 .wb-tag-chip {
     padding: 10px 20px;
-    background: #f3f4f6;
-    border: 2px solid #d1d5db;
+    background: var(--black50a);
+    border: 2px solid var(--SmartThemeBorderColor);
     border-radius: 20px;
     font-size: 0.95em;
     cursor: pointer;
@@ -129,17 +131,18 @@
     user-select: none;
     min-width: 80px;
     text-align: center;
+    color: var(--SmartThemeBodyText);
 }
 
 .wb-tag-chip:hover {
-    background: #e5e7eb;
-    border-color: #9ca3af;
+    background: var(--black70a);
+    border-color: var(--grey70);
 }
 
 .wb-tag-chip.active {
-    background: #3b82f6;
-    color: #ffffff;
-    border-color: #3b82f6;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyText);
+    border-color: var(--SmartThemeBlurTintColor);
     font-weight: 600;
 }
 
@@ -147,7 +150,9 @@
 .wb-tag-search {
     width: 100%;
     padding: 12px 15px;
-    border: 1px solid #d1d5db;
+    background: var(--black30a);
+    border: 1px solid var(--SmartThemeBorderColor);
+    color: var(--SmartThemeBodyText);
     border-radius: 8px;
     font-size: 0.95em;
     outline: none;
@@ -156,7 +161,11 @@
 }
 
 .wb-tag-search:focus {
-    border-color: #3b82f6;
+    border-color: var(--SmartThemeBlurTintColor);
+}
+
+.wb-tag-search::placeholder {
+    color: var(--grey70);
 }
 
 /* === 管理列表 === */
@@ -168,8 +177,8 @@
 }
 
 .wb-manage-item {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: var(--black30a);
+    border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 8px;
     padding: 15px;
     display: flex;
@@ -179,7 +188,7 @@
 
 .wb-manage-item-name {
     font-weight: 600;
-    color: #111827;
+    color: var(--SmartThemeBodyText);
     font-size: 1em;
 }
 
@@ -196,8 +205,8 @@
     align-items: center;
     gap: 6px;
     padding: 6px 12px;
-    background: #dbeafe;
-    color: #1e40af;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyText);
     border-radius: 12px;
     font-size: 0.85em;
 }
@@ -218,9 +227,9 @@
     width: 32px;
     height: 32px;
     border-radius: 50%;
-    border: 1px solid #d1d5db;
-    background: #ffffff;
-    color: #6b7280;
+    border: 1px solid var(--SmartThemeBorderColor);
+    background: var(--black30a);
+    color: var(--grey70);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -230,9 +239,9 @@
 }
 
 .wb-tag-add-mini:hover {
-    background: #3b82f6;
-    color: #ffffff;
-    border-color: #3b82f6;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyText);
+    border-color: var(--SmartThemeBlurTintColor);
 }
 
 /* === 操作按鈕 === */
@@ -241,7 +250,7 @@
     gap: 10px;
     justify-content: center;
     padding-top: 10px;
-    border-top: 1px solid #e5e7eb;
+    border-top: 1px solid var(--SmartThemeBorderColor);
     margin-top: auto;
     flex-shrink: 0;
 }
@@ -259,29 +268,30 @@
 }
 
 .wb-btn-primary {
-    background: #3b82f6;
-    color: #ffffff;
+    background: var(--SmartThemeBlurTintColor);
+    color: var(--SmartThemeBodyText);
 }
 
 .wb-btn-primary:hover {
-    background: #2563eb;
+    opacity: 0.9;
+    filter: brightness(1.1);
 }
 
 .wb-btn-secondary {
-    background: #f3f4f6;
-    color: #374151;
-    border: 1px solid #d1d5db;
+    background: var(--black50a);
+    color: var(--SmartThemeBodyText);
+    border: 1px solid var(--SmartThemeBorderColor);
 }
 
 .wb-btn-secondary:hover {
-    background: #e5e7eb;
+    background: var(--black70a);
 }
 
 /* === 空狀態 === */
 .wb-tag-empty {
     text-align: center;
     padding: 40px;
-    color: #9ca3af;
+    color: var(--grey70);
     font-style: italic;
 }
 
@@ -339,11 +349,11 @@
 
 .wb-tag-body::-webkit-scrollbar-thumb,
 .wb-manage-list::-webkit-scrollbar-thumb {
-    background: #d1d5db;
+    background: var(--SmartThemeBorderColor);
     border-radius: 3px;
 }
 
 .wb-tag-body::-webkit-scrollbar-thumb:hover,
 .wb-manage-list::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+    background: var(--grey70);
 }
