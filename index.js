@@ -333,6 +333,7 @@ findButtonContainer() {
                             <button class="wb-btn-small" id="wb-deselect-all" title="取消全選">
                                 <i class="fa-solid fa-times"></i> 取消
                             </button>
+                            <input type="text" class="wb-bulk-tag-input" id="wb-bulk-tag-input" placeholder="輸入標籤名稱..." />
                             <button class="wb-btn-small wb-btn-primary-small" id="wb-bulk-add-tag" title="批次新增標籤">
                                 <i class="fa-solid fa-plus"></i> 新增標籤
                             </button>
@@ -369,6 +370,13 @@ findButtonContainer() {
         overlay.querySelector('#wb-deselect-all').addEventListener('click', () => this.deselectAllWorldbooks());
         overlay.querySelector('#wb-bulk-add-tag').addEventListener('click', () => this.bulkAddTag());
         overlay.querySelector('#wb-bulk-remove-tag').addEventListener('click', () => this.bulkRemoveTag());
+
+        // 批次輸入框 Enter 鍵支援
+        overlay.querySelector('#wb-bulk-tag-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                this.bulkAddTag();
+            }
+        });
 
         // 啟用拖動功能
         this.enableDragging(overlay.querySelector('.wb-tag-modal'));
@@ -558,13 +566,18 @@ findButtonContainer() {
             return;
         }
 
-        const tag = prompt('請輸入要新增的標籤：');
-        if (!tag || !tag.trim()) return;
+        const input = document.getElementById('wb-bulk-tag-input');
+        if (!input) return;
 
-        const trimmedTag = tag.trim();
+        const tag = input.value.trim();
+        if (!tag) return;
+
         this.state.selectedWorldbooks.forEach(wb => {
-            TagStorage.addTag(wb, trimmedTag);
+            TagStorage.addTag(wb, tag);
         });
+
+        // 清空輸入框
+        input.value = '';
 
         const searchQuery = document.getElementById('wb-manage-search')?.value.toLowerCase() || '';
         this.renderManageList(searchQuery);
