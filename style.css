@@ -273,7 +273,7 @@
 
 .wb-btn-primary {
     background: var(--SmartThemeBodyText);
-    color: var(--SmartThemeBlurTintColor);
+    color: #1a1a1a;
     border: 2px solid var(--SmartThemeBodyText);
 }
 
