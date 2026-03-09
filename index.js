@@ -26,12 +26,10 @@ function getSettings() {
             if (oldData) {
                 const parsed = JSON.parse(oldData);
                 extensionSettings[MODULE_NAME].tags = parsed;
-                console.log('[WB Tags] 已從 localStorage 遷移資料');
-                // 遷移後可選擇性刪除舊資料
-                // localStorage.removeItem(OLD_STORAGE_KEY);
+                console.log('[WB Tags] 已從 localStorage 遷移資料 - index.js:29');
             }
         } catch (e) {
-            console.warn('[WB Tags] localStorage 遷移失敗:', e);
+            console.warn('[WB Tags] localStorage 遷移失敗: - index.js:32', e);
         }
     }
 
@@ -57,7 +55,7 @@ const TagStorage = {
         try {
             return getSettings().tags || {};
         } catch (e) {
-            console.error('[WB Tags] 載入失敗:', e);
+            console.error('[WB Tags] 載入失敗: - index.js:58', e);
             return {};
         }
     },
@@ -67,7 +65,7 @@ const TagStorage = {
             getSettings().tags = data;
             saveSettings();
         } catch (e) {
-            console.error('[WB Tags] 儲存失敗:', e);
+            console.error('[WB Tags] 儲存失敗: - index.js:68', e);
         }
     },
 
@@ -110,40 +108,44 @@ const UI = {
     state: {
         activeFilters: new Set(), // 當前啟用的標籤篩選
         originalOptions: [], // 保存原始的選項列表
-        selectedWorldbooks: new Set() // 批次操作：選中的世界書
+        selectedWorldbooks: new Set(), // 批次操作：選中的世界書
     },
 
     init() {
         this.injectButtons();
         this.saveOriginalOptions();
+        // 移除：startEntriesListProtection - 這是造成顯示異常的主因
     },
 
     getWorldbookList() {
         return world_names || [];
     },
 
-    // 儲存原始的下拉選單選項
+// 儲存原始的下拉選單選項
     saveOriginalOptions() {
         const selector = document.querySelector('#world_editor_select');
-        if (selector) {
+        // 只有在「沒有啟用篩選」的時候才更新原始清單，避免原始清單被篩選後的結果覆蓋
+        // 或者當原始清單是空的時候強制讀取
+        if (selector && (this.state.activeFilters.size === 0 || this.state.originalOptions.length === 0)) {
             this.state.originalOptions = Array.from(selector.options).map(opt => ({
                 value: opt.value,
                 text: opt.text
             }));
+            console.log('[WB Tags] 原始選項已更新，共 - index.js:134', this.state.originalOptions.length, '項');
         }
     },
 
     // 找到按鈕容器
-findButtonContainer() {
-    // 找到「新增」按鈕,取它的父容器
-    const createBtn = document.querySelector('#world_create_button');
-    return createBtn ? createBtn.parentElement : null;
-},
+    findButtonContainer() {
+        // 找到「新增」按鈕,取它的父容器
+        const createBtn = document.querySelector('#world_create_button');
+        return createBtn ? createBtn.parentElement : null;
+    },
 
     injectButtons() {
         const container = this.findButtonContainer();
         if (!container) {
-            console.warn('[WB Tags] 找不到按鈕容器');
+            // console.warn('[WB Tags] 找不到按鈕容器'); // 初始化時可能還沒載入，不報錯
             return;
         }
 
@@ -172,7 +174,7 @@ findButtonContainer() {
         container.appendChild(filterBtn);
         container.appendChild(manageBtn);
 
-        console.log('[WB Tags] 按鈕注入成功');
+        console.log('[WB Tags] 按鈕注入成功 - index.js:177');
     },
 
     // === 篩選功能 ===
@@ -253,9 +255,16 @@ findButtonContainer() {
         });
     },
 
-    applyFilter() {
+applyFilter() {
         const selector = document.querySelector('#world_editor_select');
         if (!selector) return;
+
+        // 保存當前選中的「名稱」與「ID」，因為 value 即將被改變
+        const selectedIndex = selector.selectedIndex;
+        const currentText = selectedIndex >= 0 ? selector.options[selectedIndex].text : '';
+        const currentValue = selector.value;
+        
+        let newSelectionValue = currentValue;
 
         // 如果沒有篩選，恢復全部
         if (this.state.activeFilters.size === 0) {
@@ -273,30 +282,61 @@ findButtonContainer() {
             if (filterBtn) {
                 filterBtn.classList.remove('wb-active');
             }
-            return;
+        } else {
+            // 篩選世界書名稱
+            const filteredNames = this.getWorldbookList().filter(wb => {
+                const tags = TagStorage.getTags(wb);
+                // 只要有任一篩選標籤就顯示
+                return Array.from(this.state.activeFilters).some(tag => tags.includes(tag));
+            });
+
+            // 更新下拉選單
+            selector.innerHTML = '';
+            
+            // 用來存放篩選後的第一個有效 ID，做為預設選取備案
+            let firstValidValue = null;
+
+            filteredNames.forEach((wbName, index) => {
+                // [關鍵修復] 查找原始選項以獲取正確的 ID (value)
+                const originalOpt = this.state.originalOptions.find(opt => opt.text === wbName);
+                
+                if (originalOpt) {
+                    const option = document.createElement('option');
+                    option.value = originalOpt.value; // 使用原始 ID (例如 "20")
+                    option.textContent = wbName;      // 使用名稱 (例如 "測試本本")
+                    selector.appendChild(option);
+
+                    if (index === 0) firstValidValue = originalOpt.value;
+                }
+            });
+
+            // 檢查當前選中的書名是否還在過濾後的列表中
+            const isCurrentStillAvailable = filteredNames.includes(currentText);
+            
+            // 如果原本選中的書不在了，預設選取第一個；如果在，保持選中
+            if (!isCurrentStillAvailable) {
+                newSelectionValue = firstValidValue || ""; // 如果沒有符合的，則為空
+            } else {
+                // 如果還在，保持原本的 Value (ID)
+                newSelectionValue = currentValue;
+            }
+
+            // 更新篩選按鈕狀態（顯示為啟用）
+            const filterBtn = document.getElementById('wb-tag-filter-btn');
+            if (filterBtn) {
+                filterBtn.classList.add('wb-active');
+            }
         }
 
-        // 篩選世界書
-        const filtered = this.getWorldbookList().filter(wb => {
-            const tags = TagStorage.getTags(wb);
-            // 只要有任一篩選標籤就顯示
-            return Array.from(this.state.activeFilters).some(tag => tags.includes(tag));
-        });
-
-        // 更新下拉選單
-        selector.innerHTML = '';
-        filtered.forEach(wb => {
-            const option = document.createElement('option');
-            option.value = wb;
-            option.textContent = wb;
-            selector.appendChild(option);
-        });
-
-        // 更新篩選按鈕狀態（顯示為啟用）
-        const filterBtn = document.getElementById('wb-tag-filter-btn');
-        if (filterBtn) {
-            filterBtn.classList.add('wb-active');
+        // 設定選取值
+        if (newSelectionValue !== null && newSelectionValue !== undefined) {
+            selector.value = newSelectionValue;
         }
+
+        // 使用 jQuery 觸發 change 事件通知 SillyTavern 更新列表
+        $(selector).trigger('change');
+        
+        console.log('[WB Tags] 篩選已套用，當前選取 ID: - index.js:339', selector.value);
     },
 
     // === 管理功能 ===
@@ -694,7 +734,7 @@ findButtonContainer() {
 
 // === 初始化 ===
 const init = () => {
-    console.log('[WB Tags] 開始初始化');
+    console.log('[WB Tags] 開始初始化 - index.js:737');
     
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
@@ -705,9 +745,13 @@ const init = () => {
     }
 };
 
-// 監聽世界書更新
 eventSource.on(event_types.WORLDINFO_UPDATED, () => {
+    // 列表更新時，重新獲取原始選項，但不要亂動 DOM
     UI.saveOriginalOptions();
+    // 檢查按鈕是否還在（有些操作可能會重繪介面）
+    if (!document.getElementById('wb-tag-filter-btn')) {
+        UI.injectButtons();
+    }
 });
 
 init();
